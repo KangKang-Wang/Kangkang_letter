@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>那封信</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+      margin: 0; 
+      background: linear-gradient(135deg, #f5e6d3 0%, #e8d5c4 100%);
+      color: #3d2f2f; 
+      min-height: 100vh;
+      padding: 20px 10px;
+    }
+    .wrap { 
+      max-width: 680px; 
+      margin: 0 auto; 
+      padding: 0; 
+    }
+    .card { 
+      background: #fffef9;
+      border: none;
+      border-radius: 8px; 
+      padding: 20px 24px; 
+      margin: 18px 0; 
+      box-shadow: 0 2px 12px rgba(139, 90, 60, 0.08),
+                  0 8px 24px rgba(139, 90, 60, 0.06);
+      position: relative;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 8px;
+      border: 1px solid rgba(139, 90, 60, 0.12);
+      pointer-events: none;
+    }
+    .msg { 
+      color: #8b5a3c; 
+      font-size: 15px;
+      text-align: center;
+      font-weight: 500;
+    }
+    iframe { 
+      width: 100%; 
+      min-height: 70vh; 
+      border: none; 
+      border-radius: 8px; 
+      background: #fffef9;
+      box-shadow: 0 2px 12px rgba(139, 90, 60, 0.08),
+                  0 8px 24px rgba(139, 90, 60, 0.06);
+      margin-top: 18px;
+    }
+    a { 
+      color: #b89968; 
+      text-decoration: none; 
+    }
+    a:hover { 
+      text-decoration: underline; 
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="content"></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/aes-js@3.1.2/index.min.js"></script>
+<script>
+  const ENC_URL = "./letter.enc";
+
+  function base64UrlToBytes(b64u) {
+    const b64 = b64u.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64u.length + 3) % 4);
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  function base64ToBytes(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  function setMsg(text) {
+    // 不再显示消息
+  }
+
+  function getTokenFromHash() {
+    const hash = (window.location.hash || "").replace(/^#/, "");
+    const params = new URLSearchParams(hash);
+    return params.get("t") || "";
+  }
+
+  // 纯 JS AES-GCM 解密实现（兼容非 HTTPS 环境）
+  async function aesGcmDecryptFallback(key, iv, ciphertext) {
+    // AES-GCM = AES-CTR + GHASH
+    // 这里简化处理：如果 crypto.subtle 不可用，提示用户使用 HTTPS
+    throw new Error("此浏览器环境不支持加密解密，请使用 HTTPS 访问或换用现代浏览器。");
+  }
+
+  async function aesGcmDecrypt(keyBytes, iv, ciphertext) {
+    if (typeof crypto !== "undefined" && crypto.subtle) {
+      try {
+        const key = await crypto.subtle.importKey(
+          "raw",
+          keyBytes,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
+        );
+        return await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv },
+          key,
+          ciphertext
+        );
+      } catch (e) {
+        // 如果 Web Crypto 失败，尝试 fallback
+        console.warn("Web Crypto API 解密失败:", e);
+      }
+    }
+    // Fallback（需要纯 JS 的 AES-GCM 实现，这里暂时抛出错误）
+    return await aesGcmDecryptFallback(keyBytes, iv, ciphertext);
+  }
+
+  async function main() {
+    const tokenB64u = getTokenFromHash();
+    if (!tokenB64u) {
+      setMsg("没有通关凭证。请先从校验页进入。");
+      return;
+    }
+
+    // token 直接作为 AES-GCM key（32 bytes）
+    const keyBytes = base64UrlToBytes(tokenB64u);
+    if (keyBytes.length !== 32) {
+      setMsg("通关凭证格式不对。请返回重新验证。");
+      return;
+    }
+
+    setMsg("读取信件封印…");
+    const resp = await fetch(ENC_URL + "?_t=" + Date.now());
+    if (!resp.ok) throw new Error("无法加载 letter.enc");
+    const encObj = await resp.json();
+
+    const iv = base64ToBytes(encObj.iv);
+    const ciphertext = base64ToBytes(encObj.ciphertext);
+
+    setMsg("解密中…");
+    let plainBuf;
+    try {
+      plainBuf = await aesGcmDecrypt(keyBytes, iv, ciphertext);
+    } catch (e) {
+      console.error("解密错误:", e);
+      setMsg("解密失败：可能有题目没答对，或者链接被复制时缺了内容。请回到校验页再来一次。");
+      return;
+    }
+
+    const text = new TextDecoder("utf-8").decode(plainBuf);
+
+    // 用 iframe 渲染 HTML 信件（隔离样式，省心）
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("sandbox", "allow-same-origin");
+    iframe.srcdoc = text;
+
+    const c = document.getElementById("content");
+    c.innerHTML = "";
+    c.appendChild(iframe);
+
+    setMsg("已打开。");
+  }
+
+  main().catch(err => {
+    console.error(err);
+    setMsg("打开失败：请检查 letter.enc 是否可访问。");
+  });
+</script>
+</body>
+</html>
