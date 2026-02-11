@@ -1,0 +1,53 @@
+{
+  "title": "康康的加密信件 🔐",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "number_unit",
+      "prompt": "深圳到成都的距离是多少公里？",
+      "unit": "公里",
+      "placeholder": "请输入数字",
+      "error_hint": "我给你说过的深圳到成都的距离",
+      "salt": "e4c1d2a9",
+      "answer_hashes": [
+        "7cb505946417ea2ef29b6e6c6ee9a6bd2afa5b3cab96e03c7a75c48e70767266"
+      ],
+      "token_hash": "e34879cb2626437e5d5a556e6008ecfa6661cc1028c4f0c498e67726d289ca1c"
+    },
+    {
+      "id": "q2",
+      "type": "limit_text",
+      "prompt": "你经常用那两个字来形容我？",
+      "maxlength": 2,
+      "placeholder": "两个字",
+      "error_hint": "再好好想想",
+      "salt": "b39a7c10",
+      "answer_hashes": [
+        "67e8dae12b2db757d006563a6cdbae6375ebff2d061cf820ee50e61e2ed76e8c",
+        "5084bfcfe18914a5459cc8e86a3c013d5719be558ff8a55ff9230bdcaaf91aaa"
+      ],
+      "token_hash": "bf108cfde9582557454e6f904759abfb26a4ccaf38ee06470b3736510c260521"
+    },
+    {
+      "id": "q3",
+      "type": "dialpad",
+      "prompt": "开门密码？",
+      "placeholder": "按下面的键盘输入",
+      "error_hint": "在门外🚪站着去！！",
+      "salt": "c72f8e3d",
+      "answer_hashes": [
+        "3f7a611f90bd14160423fc09fa4f1cebc732976ca5f3296ebc9703147eea2379",
+        "95a30ec99355680aee838dc6eabe61c337aa36bed0222e9eb1ba586221dcb6e1"
+      ],
+      "token_hash": "40b05df017ea47eecbee21fa4c586fcfdfa348703033c3528e0b8605f208e8ea"
+    },
+    {
+      "id": "q4",
+      "type": "voice_record",
+      "prompt": "按住唱一首歌给我听吧~（至少1分钟）",
+      "min_duration": 60,
+      "hint": "长按下方按钮开始录制，需要持续按住哦",
+      "error_hint": "既然答错了，那就重新唱吧😊"
+    }
+  ]
+}
