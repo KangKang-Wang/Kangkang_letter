@@ -24,7 +24,9 @@
       "salt": "b39a7c10",
       "answer_hashes": [
         "67e8dae12b2db757d006563a6cdbae6375ebff2d061cf820ee50e61e2ed76e8c",
-        "5084bfcfe18914a5459cc8e86a3c013d5719be558ff8a55ff9230bdcaaf91aaa"
+        "5084bfcfe18914a5459cc8e86a3c013d5719be558ff8a55ff9230bdcaaf91aaa",
+        "05da24f4acb8343a7cce06cc0ec0dc512f955396f6b29c04c4a1349d7dcf2d25",
+        "bdb5fca406891070ab31451ec32aa2c4574b2d7458a41a533061ff8877fcc0bb"
       ],
       "token_hash": "bf108cfde9582557454e6f904759abfb26a4ccaf38ee06470b3736510c260521"
     },
